@@ -1,0 +1,305 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="container-fluid mt-2">
+    <div class="row">
+        <div id="userJoinedInfoMessage" class="alert alert-secondary col-6" style="display:none;">
+        </div>
+        <div class="col-3 text-center">
+            <div id="loginCard" class="card">
+                <div class="card-header">
+                    <input id="inputNickname" type="text" class="form-control" placeholder="Enter your nickname " />
+                    <br />
+                    <button id="btnLogin" class="btn btn-success w-100 btn-sm">LogIn</button>
+                </div>
+            </div>
+            <div id="loginnedCard" style="display:none;" class="card" >
+                
+            </div>
+            <br />
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="h5">Online Users</h5>
+                </div>
+                <div class="card-body">
+                    <div id="_onlineUserList" class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action onlineusers active" aria-current="true">
+                            AllUsers
+                        </a>
+                    </div>
+                    <div id="onlineUserList" class="list-group">
+                        <p><i class="text">If you want to send message, please correct user.</i></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card">
+                <div class="card-header">
+                    <textarea id="inputMessage" class="form-control" placeholder="Enter your message">
+                    </textarea>
+                    <br />
+                    <button id="btnSendToGroup" class="btn btn-success btn-sm  ">Send To Group</button>
+                    <button id="btnSendToUser" class="btn btn-success btn-sm float-end">Send To User</button>
+                </div>
+                <div id="showMessages" style="height:300px; display:none;" class="card-body list-group justify-content-between  overflow-auto">
+                    <a class="list-group-item list-group-item-action message">
+                        <div class="d-flex w-100 ">
+                            <h5 id="senderNickName" class="mb-1"></h5>
+                            <h5 id="receiverNickName" class="mb-1"></h5>
+                        </div>
+                        <p class="mb-1"></p>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-3 text-center">
+            <div class="card">
+                <div class="card-header">
+                    <input id="inputChatRoomName" type="text" class="form-control" placeholder="Enter chat room name" />
+                    <br />
+                    <button id="btnCreateChatRoom" class="btn btn-success w-100 btn-sm">Create Chat Room</button>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Groups</h5>
+                </div>
+                <div class="card-body">
+                    <div id="_chatGroupList" class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action groups active" aria-current="true">
+                            AllGroups
+                        </a>
+                    </div>
+                    <div id="chatGroupList" class="list-group">
+                        <p><i class="text">If you want to send message, please correct group.</i></p>
+                    </div>
+                    <div>
+                        <btn id="joinToGroup" class="btn btn-success btn-sm w-100">Join To Group</btn>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@section Scripts{
+    <script>
+        $(document).ready(function() {
+
+            $("body").on('click', '.onlineusers', function() {
+                $(".onlineusers").each(function(index, item) {
+                    item.classList.remove("active");
+                });
+                $(this).addClass("active");
+            });
+
+            $("body").on('click', '.groups', function() {
+                $(".groups").each(function(index, item) {
+                    item.classList.remove("active");
+                });
+                $(this).addClass("active");
+            });
+
+            $('#inputMessage').trumbowyg({
+                lang: 'en',
+                btns: [['bold', 'italic'],
+                ['link'],
+                ['horizontalRule'],
+                ['removeformat'],
+                ['fullscreen']]
+            });
+
+            //CONNECTION SIGNALR
+            const connection = new signalR.HubConnectionBuilder().withUrl("/chatHub") //endpoint'e istek yapar.
+                .withAutomaticReconnect() //(bağlantı var ama koptuysa) başarısız olma durumunda sırasıyla (default) 0, 2, 10 ve 30 saniye                                                     bekleyerek tekrar istek yapar. Bağlantı yine başarısız olursa tekrar bağlantı isteği yollamaz.
+                .build();
+            let i = 0;
+            startConnection();
+            async function startConnection() {
+                try {
+                    await connection.start();
+                    console.assert(connection.state === signalR.HubConnectionState.Connected);
+                    console.log("SignalR connected succesfuly.");
+                } catch {
+                    i++;
+                    console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+                    if (i > 10) {
+                        alert("Connection failed. Check your internet connection.")
+                        return;
+                    };
+                    setTimeout(() => startConnection(), 2000);
+                }
+            }
+
+            connection.onreconnecting(error => {
+                console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
+                document.getElementById("inputMessage").disabled = true;
+
+            });
+
+            //bağlantı kopma hatası durumda düzelirse tetiklenir.
+            connection.onreconnected(connectionId => {
+                console.assert(connection.state === signalR.HubConnectionState.Connected);
+                document.getElementById("inputMessage").disabled = false;
+
+            });
+
+            //bağlantı kopma hatası durumda 4 denemede de düzelmezse tetiklenir.
+            connection.onclose(error => {
+                console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+                document.getElementById("inputMessage").disabled = true;
+            });
+
+            //**CREATE GROUP**/
+            $("#btnCreateChatRoom").click(function() {
+                let chatRoomName = $("#inputChatRoomName").val();
+                connection.invoke("AddToGroup", chatRoomName).catch((err) => {
+                    console.log(err);
+                });
+
+                console.log("grup oluşturma işlemi başarılı.");
+            });
+            //**CREATE GROUP**/
+
+            //**ALL GROUPS LİST **/
+            connection.on("AllGroups", function(groupList) {
+                $("#chatGroupList").html("");
+                $(groupList).each(function(index, item) {
+                    console.log(item);
+                    $("#chatGroupList").append(`
+                                                                                                   <a href="#" class="list-group-item list-group-item-action groups" aria-current="true">
+                                                                                                       ${item.groupName}
+                                                                                                   </a>`);
+                });
+            });
+
+            //**JOINGROUP **/
+            $("#joinToGroup").click(function() {
+                let groupName = $(".groups.active").html();
+                let trimGroupName = groupName.trim();
+                connection.invoke("AddToGroup", trimGroupName).catch((err) => {
+                    console.log(err);
+                });
+                console.log("grup subscribe işlemi başarılı.");
+            });
+            //**JOINGROUP **/
+
+            //SEND MESSAGE
+            $("#btnSendToGroup").click(function() {
+                let message = $("#inputMessage").val();
+                let groupName = $(".groups.active").html();
+                let trimGroupName = groupName.trim();
+                connection.invoke("SendMessageToGroup", message, trimGroupName).catch((err) => {
+                    console.log(err);
+                });
+                console.log("mesaj gönderimi başarılı.");
+            });
+
+            connection.on("ReceiveMessageAllClientInGroup", function(message, senderNickName) {
+                const _message = $(".message").clone();
+                _message.removeClass("message");
+                _message.find("h5")[0].innerHTML = senderNickName;
+                _message.find("p").html(message);
+                $("#showMessages").append(_message);
+                $("#showMessages").show();
+                console.log(message);
+                console.log(senderNickName);
+            });
+
+
+
+            //**LOGIN**//
+            //giriş işlemi
+            $("#btnLogin").click(function() {
+                let userNickName = $("#inputNickname").val();
+                connection.invoke("ConvertNickName", userNickName).catch(function(err) {
+                    console.log(`Kullanıcı sisteme giriş yaparken bir hata ile karşılaşıldı. ${err}`);
+                });
+                $("#loginnedCard").html(userNickName);
+                $("#loginnedCard").show();
+                $("#loginCard").hide();
+            });
+            // giriş sonrası bilgi mesajı ( function(userNickname) server'dan gelecek. )
+            connection.on("ClientJoined", function(userNickName) {
+                $("#userJoinedInfoMessage").html(`${userNickName} logged into the sytem`);
+                $("#userJoinedInfoMessage").fadeIn(1000, function() {
+                    setTimeout(function() {
+                        $("#userJoinedInfoMessage").fadeOut(1000);
+                    }, 2000);
+                });
+            });
+            //**LOGIN**//
+
+            //**ONLINE USERS**//
+            connection.on("OnlineUsers", function(onlineUserList) {
+                $("#onlineUserList").html("");
+                $(onlineUserList).each(function(index, item) {
+                    $("#onlineUserList").append(`<a href="#" class="list-group-item list-group-item-action onlineusers" aria-current="true">                                                                                                                                ${item.nickName}
+                                                                                                                                                                                                                                                   </a>`);
+                });
+            });
+            //**ONLİNE USERS**//
+
+            //**SEND MESSAGE
+            $("#btnSendToUser").click(() => {
+                let receiveNickName = $(".onlineusers.active").html();
+                let trimReceiveNickName = receiveNickName.trim();
+                let message = $("#inputMessage").val();
+                connection.invoke("SendMessage", message, trimReceiveNickName).catch((err) => {
+                    console.log(err);
+                });
+                const _message = $(".message").clone();
+                _message.removeClass("message");
+                _message.find("p").html(message);
+                _message.find("h5")[1].innerHTML = "You";
+                $("#showMessages").append(_message);
+                $("#showMessages").show();
+            });
+
+            //all client
+            connection.on("ReceiveMessageAllClient", function(message, senderNickName) {
+                console.log(message);
+                console.log(senderNickName);
+            });
+
+            connection.on("ReceiveMessageAClient", function(message, senderNickName) {
+                const _message = $(".message").clone();
+                _message.removeClass("message");
+                _message.find("h5")[0].innerHTML = senderNickName;
+                _message.find("p").html(message);
+                $("#showMessages").append(_message);
+                $("#showMessages").show();
+                console.log(message);
+                console.log(senderNickName);
+            });
+            //OLD CODES....
+            //$("#btnSendToUser").click(() => {
+            //    const userSenderNickName = $("#inputNickname").val();
+            //    const userReceiveNickName = $(".onlineusers.active").html();
+            //    let trimReceiveUserNickName = userReceiveNickName.trim();
+            //    let message = $("#inputMessage").val();
+            //    connection.invoke("SendMessage", message, userSenderNickName, trimReceiveUserNickName).catch((err) => {
+            //        console.log(err);
+            //    });
+            //})
+            //connection.on("SenderUserMessage", function(message,nickName) {
+            //    $("#senderUserNickName").html(`${nickName}`)/////
+            //    $("#senderuser").append(`<p id="senderMessageContent" >${message}</p>`);
+            //});
+            //connection.on("ReceiveUserMessage", function(message,nickName) {
+            //    $("#receiveUserNickName").html(`${nickName}`)/////
+            //    $("#receiveuser").append(`<p id="receiveMessageContent"> ${message}</p>`);
+            //    //document.getElementById("messageList").appendChild(li);
+            //});
+            //OLD CODES...
+            //**SENDMESSAGE
+
+
+
+
+        });
+
+
+    </script>
+    }

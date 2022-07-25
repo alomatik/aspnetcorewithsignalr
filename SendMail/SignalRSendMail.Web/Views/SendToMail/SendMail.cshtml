@@ -1,0 +1,44 @@
+﻿@model MailandMessageDto
+@{
+    Layout = "_Layout";
+}
+<div class="card text-center">
+    <div class="card-header">Send YourSelf Message</div>
+    <div class="card-body">
+        <form id="mailform" asp-action="SendMail" asp-controller="SendToMail" method="post">
+            <div class="mb-3">
+                <label asp-for="Mail" class="form-label"></label>
+                <input id="email" type="email" class="form-control" asp-for="Mail">
+                <span asp-validation-for="Mail"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Message" class="form-label"></label>
+                <textarea id="textMessage" asp-for="Message"></textarea>
+                <span asp-validation-for="Mail"></span>
+            </div>
+            <button id="btnSend" type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#textMessage').trumbowyg({
+                btns: [['strong', 'em',], ['insertImage']],
+                autogrow: true
+            });
+            $("#btnSend").click(function(e) {
+                e.preventDefault();
+                let txtMessage = $("#textMessage").val();
+                let mail = $("#email").val();
+                $.post("SendMail", {
+                    Mail: mail,
+                    Message: txtMessage
+                }, () => {
+
+                });
+            });
+
+        });
+    </script>
+}

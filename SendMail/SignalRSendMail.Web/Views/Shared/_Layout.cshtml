@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SignalRSendMail.Web</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SignalRSendMail.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/ui/trumbowyg.min.css" integrity="sha512-nwpMzLYxfwDnu68Rt9PqLqgVtHkIJxEPrlu3PfTfLQKVgBAlTKDmim1JvCGNyNRtyvCx1nNIVBfYm8UZotWd4Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SignalRSendMail.Web</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="SendToMail" asp-action="SendMail">SendMail</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+           @* <div style="display:none;" id="showMessageInfo" class="alert alert-success">
+            </div>*@
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2022 - SignalRSendMail.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.7/signalr.min.js" integrity="sha512-Aijk+ipiP35gqQx1jTDzb7U4PceIAXjqSuCchQ+Wb4GTM7gAKK9f9K5aJxLxCbEIpmHB/zeYBOX/D9UqswZ6vQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js" integrity="sha512-t4CFex/T+ioTF5y0QZnCY9r5fkE8bMf9uoNH2HNSwsiTaMQMO0C9KbKPMvwWNdVaEO51nDL3pAzg4ydjWXaqbg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js" integrity="sha512-lbwH47l/tPXJYG9AcFNoJaTMhGvYWhVM9YI43CT+uteTRRaiLCui8snIgyAN8XWgNjNhCqlAUdzZptso6OCoFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.24/dist/sweetalert2.all.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder().withUrl("/messageHub") //endpoint'e istek yapar.
+            .withAutomaticReconnect() //(bağlantı var ama koptuysa) başarısız olma durumunda sırasıyla (default) 0, 2, 10 ve 30 saniye                                                     bekleyerek tekrar istek yapar. Bağlantı yine başarısız olursa tekrar bağlantı isteği yollamaz.
+            .build();
+        let i = 0;
+        startConnection();
+        async function startConnection() {
+            try {
+                await connection.start();
+                console.assert(connection.state === signalR.HubConnectionState.Connected);
+                console.log("SignalR connected succesfuly.");
+            } catch {
+                i++;
+                console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+                if (i > 10) {
+                    alert("Connection failed. Check your internet connection.")
+                    return;
+                };
+                setTimeout(() => startConnection(), 2000);
+            }
+        }
+        connection.onreconnecting(error => {
+            console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
+        });
+
+        //bağlantı kopma hatası durumda düzelirse tetiklenir.
+        connection.onreconnected(connectionId => {
+            console.assert(connection.state === signalR.HubConnectionState.Connected);
+        });
+
+        //bağlantı kopma hatası durumda 4 denemede de düzelmezse tetiklenir.
+        connection.onclose(error => {
+            console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+        });
+
+        connection.on("ReceiveMessage", function(message) {
+            console.log("tetiklendi.");
+            console.log(message);
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: `${message}`,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

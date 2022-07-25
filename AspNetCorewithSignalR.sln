@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelloSignalR", "HelloSignalR", "{CC262C96-01A7-4B5D-AFB9-BE4C0B54DF5A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRHelloSignalR.Server", "HelloSignalR\SignalRHelloSignalR.Server\SignalRHelloSignalR.Server.csproj", "{2785E53C-C1FF-4512-9314-4978DC5DF8CC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LetsTalk", "LetsTalk", "{9624F322-D95B-404D-BD32-1E597AC30A20}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRLetsTalk.Web", "LetsTalk\SignalRLetsTalk.Web\SignalRLetsTalk.Web.csproj", "{81AF06DF-9039-4372-888C-AB455D10ABEE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SendMail", "SendMail", "{AFFC060B-B716-40C2-8A8F-70029FD124F1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRSendMail.Web", "SendMail\SignalRSendMail.Web\SignalRSendMail.Web.csproj", "{B21C84E4-286B-458D-8E58-8AA26F362355}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRSenderMail.WorkerService", "SendMail\SignalRSenderMail.WorkerService\SignalRSenderMail.WorkerService.csproj", "{461B6164-14EC-4C05-936C-735EB596F8CC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2785E53C-C1FF-4512-9314-4978DC5DF8CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2785E53C-C1FF-4512-9314-4978DC5DF8CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2785E53C-C1FF-4512-9314-4978DC5DF8CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2785E53C-C1FF-4512-9314-4978DC5DF8CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81AF06DF-9039-4372-888C-AB455D10ABEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81AF06DF-9039-4372-888C-AB455D10ABEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81AF06DF-9039-4372-888C-AB455D10ABEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81AF06DF-9039-4372-888C-AB455D10ABEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B21C84E4-286B-458D-8E58-8AA26F362355}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B21C84E4-286B-458D-8E58-8AA26F362355}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B21C84E4-286B-458D-8E58-8AA26F362355}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B21C84E4-286B-458D-8E58-8AA26F362355}.Release|Any CPU.Build.0 = Release|Any CPU
+		{461B6164-14EC-4C05-936C-735EB596F8CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{461B6164-14EC-4C05-936C-735EB596F8CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{461B6164-14EC-4C05-936C-735EB596F8CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{461B6164-14EC-4C05-936C-735EB596F8CC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2785E53C-C1FF-4512-9314-4978DC5DF8CC} = {CC262C96-01A7-4B5D-AFB9-BE4C0B54DF5A}
+		{81AF06DF-9039-4372-888C-AB455D10ABEE} = {9624F322-D95B-404D-BD32-1E597AC30A20}
+		{B21C84E4-286B-458D-8E58-8AA26F362355} = {AFFC060B-B716-40C2-8A8F-70029FD124F1}
+		{461B6164-14EC-4C05-936C-735EB596F8CC} = {AFFC060B-B716-40C2-8A8F-70029FD124F1}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ABCF4402-5480-4C12-812C-784904C6CAB3}
+	EndGlobalSection
+EndGlobal

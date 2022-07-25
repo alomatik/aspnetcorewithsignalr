@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalR</title>
+</head>
+
+<body>
+    <div id="totalClients">
+    </div>
+
+    <input type="text" id="messageInput">
+    <button id="btnSend">Send</button>
+    <ul id="messageList">
+    </ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+            integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        $(document).ready(function () {
+            //bağlantı kurar
+            const connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:7065/chatHub") //endpoint'e istek yapar.
+                .withAutomaticReconnect() //(bağlantı var ama koptuysa) başarısız olma durumunda sırasıyla (default) 0, 2, 10 ve 30 saniye bekleyerek tekrar istek yapar. Bağlantı yine başarısız olursa tekrar bağlantı isteği yollamaz.
+                .build();
+            start();
+            let i = 0;
+            async function start() {
+                try {
+                    await connection.start();
+                    console.assert(connection.state === signalR.HubConnectionState.Connected);
+                    console.log("SignalR Connected.");
+                } catch (err) {
+                    i++;
+                    console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+                    if (i > 10) {
+                        alert("Connection failed. Check your internet connection.")
+                        return;
+                    }
+                    console.log(err);
+                    setTimeout(() => start(), 500);
+                }
+            };
+
+            //bağlantı kopma hatası durumunda tetiklenir.
+            connection.onreconnecting(error => {
+                //console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
+                document.getElementById("messageInput").disabled = true;
+
+                const li = document.createElement("li");
+                li.textContent = `Connection lost due error ${error}. Reconnecting.`
+                $("#messageList").append(li);
+            });
+
+            //bağlantı kopma hatası durumda düzelirse tetiklenir.
+            connection.onreconnected(connectionId => {
+                //console.assert(connection.state === signalR.HubConnectionState.Connected);
+                document.getElementById("messageInput").disabled = false;
+
+                const li = document.createElement("li");
+                li.textContent = `Connection reestablished. Connected with connectionId "${connectionId}".`;
+                document.getElementById("messageList").appendChild(li);
+            });
+
+            //bağlantı kopma hatası durumda 4 denemede de düzelmezse tetiklenir.
+            connection.onclose(error => {
+                //console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+                document.getElementById("messageInput").disabled = true;
+
+                const li = document.createElement("li");
+                li.textContent = `Connection closed due to error "${error}". Try refreshing this page to restart the connection.`;
+                document.getElementById("messageList").appendChild(li);
+            });
+
+
+            //servere yollancak veri.
+            $("#btnSend").click(() => {
+                let message = $("#messageInput").val();
+                connection.invoke("SendMessageAsync", message).catch(function (err) {
+                    console.log(err);
+                });
+            });
+
+            //serverden gelen veri.
+            connection.on("ReceiveMessage", (message) => { //serverdan gelen sendAsync methodu ile tüm clientlara gönderilen veri.
+                const li = document.createElement("li");
+                li.textContent = `${message}`;
+                document.getElementById("messageList").appendChild(li);
+            });
+
+            connection.on("UserJoined", (userId) => { //serverdan gelen sendAsync methodu ile tüm clientlara gönderilen veri.
+                const li = document.createElement("li");
+                li.textContent = `${userId} joined.`;
+                document.getElementById("messageList").appendChild(li); 
+            });
+
+            connection.on("UserLeft", (userId) => { //serverdan gelen sendAsync methodu ile tüm clientlara gönderilen veri.
+                const li = document.createElement("li");
+                li.textContent = `${userId} left.`;
+                document.getElementById("messageList").appendChild(li);
+            });
+            
+            connection.on("TotalClients", (clients) => { //serverdan gelen sendAsync methodu ile tüm clientlara gönderilen veri.
+                let text = "";
+                $.each(clients, (index, item) => {
+                    text += `<p>${item}</p>`
+                });
+                $("div").html(text);
+            });
+        });
+    </script>
+</body>
+
+</html>
